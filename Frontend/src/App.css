@@ -1,0 +1,5 @@
+/* Clean up legacy Vite boilerplate styles */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
