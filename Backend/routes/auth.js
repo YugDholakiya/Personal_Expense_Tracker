@@ -44,7 +44,8 @@ auth.post('/verifyEmail', async (req, res) => {
             throw new Error("Both Fields are must");
         }
 
-        const { email, otp } = req.body;
+        const email = req.body.email.toLowerCase();
+        const { otp } = req.body;
 
         let storedOtp
 
