@@ -99,13 +99,17 @@ async function sendEmail(userData) {
     console.log("Brevo Response:", data);
 
     const { name, email, password } = userData;
+    console.log("Storing OTP for email:", email);
+    console.log("OTP value:", secret, "| Length:", secret.length);
+    
     await redisClient.set(`otp:${email}`, secret,{ EX: 300 });
     await redisClient.set(
       `user:${email}`,
       JSON.stringify({ name, email, password }),
       { EX: 300 }
     );
-
+    
+    console.log("OTP stored successfully for:", email);
     return true;
   } catch (err) {
     console.log("Error: ",err);

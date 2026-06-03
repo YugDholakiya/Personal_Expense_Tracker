@@ -17,8 +17,12 @@ auth.post('/register', async (req, res) => {
     try {
         validateUser(req.body);
         req.body.email = req.body.email.toLowerCase();
-        req.body.password = await bcrypt.hash(req.body.password, 10);
 
+        // Delete any existing OTP for this email to allow immediate re-request
+        await redisClient.del(`otp:${req.body.email}`);
+        await redisClient.del(`user:${req.body.email}`);
+
+        req.body.password = await bcrypt.hash(req.body.password, 10);
 
         const emailSend = await sendEmail(req.body);
 
@@ -44,8 +48,10 @@ auth.post('/verifyEmail', async (req, res) => {
             throw new Error("Both Fields are must");
         }
 
-        const email = req.body.email.toLowerCase();
-        const { otp } = req.body;
+        const email = req.body.email.toLowerCase().trim();
+        const otp = req.body.otp.trim();
+
+       ;
 
         let storedOtp
 
@@ -55,26 +61,29 @@ auth.post('/verifyEmail', async (req, res) => {
             throw new Error("Not Getting the Redis Output");
         }
 
-        if (!storedOtp)
+        if (!storedOtp) {
             throw new Error("Invalid Credential")
+        }
 
-        if (storedOtp != otp)
+        console.log("Comparison: storedOtp (", storedOtp, ") vs userOtp (", otp, ")");
+        if (storedOtp !== otp)
             throw new Error("Invalid OTP");
 
         const userRawData = await redisClient.get(`user:${email}`);
-        console.log(userRawData);
-        // if (!userRawData)
-        //     throw new Error("User Detail not found");
+        
+        
+        if (!userRawData) {
+            throw new Error("User Detail not found in Redis");
+        }
 
         await redisClient.del(`otp:${email}`);
         await redisClient.del(`user:${email}`);
 
-
-        const userinfo = JSON.parse(userRawData);
-
+        const userinfo = JSON.parse(userRawData);;
 
         //userData = {...userData,...userinfo};
-        await user.create(userinfo);
+        const createdUser = await user.create(userinfo);
+       
 
         res.json({ success: true });
         //res.status(200).send("Registered Succesfully");

@@ -4,6 +4,7 @@ export default function MonthlySummary({ refresh }) {
   const [summary, setSummary] = useState({ budget: 0, income: 0, expense: 0 });
   const [error, setError] = useState("");
   const [ref, setRef] = useState(refresh);
+  const [isLoaded, setIsLoaded] = useState(false);
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
@@ -19,18 +20,28 @@ export default function MonthlySummary({ refresh }) {
         `${import.meta.env.VITE_API_URL}/expense/monthly?month=${selectedMonth}&year=${selectedYear}`,
         { method: "GET", credentials: "include", headers: { "Content-Type": "application/json" } }
       );
+      
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+      
       const info = await response.json();
       console.log(info);
-      if (!info.title) throw new Error(info.message || "Could not load monthly summary.");
-      console.log(info.data.expense);
-      if (info.data) {
-        setSummary({
-          budget: info.data.budget.toFixed(2),
-          income: info.data.income.toFixed(2),
-          expense: info.data.expense,
-        });
+      
+      // Check if we got valid data
+      if (!info.data) {
+        throw new Error(info.message || "Could not load monthly summary.");
       }
+      
+      console.log(info.data.expense);
+      setSummary({
+        budget: info.data.budget.toFixed(2),
+        income: info.data.income.toFixed(2),
+        expense: info.data.expense,
+      });
+      setIsLoaded(true);
     } catch (err) {
+      console.error("Monthly summary error:", err);
       setError(err.message);
     }
   };
@@ -72,7 +83,7 @@ export default function MonthlySummary({ refresh }) {
 
   return (
     <div style={styles.wrapper}>
-      {error && (
+      {error && isLoaded && (
         <div style={styles.errorBanner}>
           <span>⚠</span>
           <span>{error}</span>

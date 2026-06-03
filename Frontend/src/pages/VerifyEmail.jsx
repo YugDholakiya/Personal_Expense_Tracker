@@ -26,7 +26,7 @@ function VerifyEmail() {
         body: JSON.stringify({ email: form.email, otp: form.otp }),
       });
       const data = await response.json();
-      if (!response.ok || !data.success) {
+      if (!data.success) {
         throw new Error(data.message || "Invalid OTP. Please try again.");
       }
       setSuccess("Email verified! Redirecting to login…");
