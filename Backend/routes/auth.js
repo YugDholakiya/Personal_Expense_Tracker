@@ -113,21 +113,13 @@ auth.post('/login', async (req, res) => {
 
         //jwt token
         const token = jwt.sign({ name: detail.name, _id: detail.id }, process.env.KEY, { expiresIn: 86400 });
-        //res.cookie('token',token);
-        // res.redirect("http://localhost:5173/");
-        // res.cookie("token", token, {
-        //     httpOnly: true,
-        //     sameSite: "none",
-        //     secure: false
-        // });
-        // res.cookie("token",token, {   
-        //         sameSite: "none", 
-        //         maxAge: 24 * 60 * 60 * 1000, // 1 day
-        //     })
+        
+        // Set cookie with appropriate security settings based on environment
+        const isProduction = process.env.NODE_ENV === 'production';
         res.cookie("token", token, {
             httpOnly: true,
-            sameSite: "lax",
-            secure: false,
+            sameSite: isProduction ? "none" : "lax",
+            secure: isProduction,  // true in production (HTTPS), false in development
             path: "/"
         });
 
@@ -143,11 +135,11 @@ auth.post('/login', async (req, res) => {
 auth.post('/logout', userAuth, async (req, res) => {
     try {
         const token = jwt.sign({ name: "xyz" }, process.env.KEY, { expiresIn: 0 });
-        console.log(token);
+        const isProduction = process.env.NODE_ENV === 'production';
         res.cookie('token', token, {
             httpOnly: true,
-            sameSite: "lax",
-            secure: false,
+            sameSite: isProduction ? "none" : "lax",
+            secure: isProduction,
             path: "/"
         });
         res.json({ msg: "Logout Successfully" });
