@@ -14,11 +14,18 @@ const db_connect = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_DATABASE,
+
+  port: Number(process.env.DB_PORT),
+
+  ssl: {
+    rejectUnauthorized: false,
+  },
+
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelayMs: 0,
+  keepAliveInitialDelay: 0,
 });
 
 console.log("✓ MySQL Connection Pool created");
